@@ -130,8 +130,12 @@ dmypy.json
 
 #VSCode
 *.code-workspace
+.vscode
 
 #Testing files
 potion-shop.json
+potion-shop-edited.json
 swap-map.json
 output.json
+sedit.nbt
+
