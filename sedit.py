@@ -1,3 +1,5 @@
+import json
+from pkgutil import iter_modules
 import sys
 
 import argparse
@@ -9,12 +11,28 @@ COMMAND_REPACK = "repack"
 
 
 def unpack(schematic, map):
-    print(schematic)
-    print(map)
+
+    with open(schematic) as file:
+        json_schematic = json.load(file)
+
+    schematic_header = json_schematic["header"]
+
+    item_list = schematic_header["material_list"]["root_entry"]
+
+    swap_map = dict()
+
+    for item in item_list:
+        block_id = item["item"]["id"]
+        swap_map[block_id] = block_id
+
+    with open(map, "w") as mapfile:
+        json.dump(swap_map, mapfile,indent=4)
+
 
 def repack(schematic, output, map):
-    print(map)
-    print(output)
+    pass
+
+
 
 
 
