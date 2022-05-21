@@ -1,12 +1,15 @@
 import copy
-import enum
 import json
 from pkgutil import iter_modules
 import sys
 
 import argparse
-from ast import arg, parse
 from typing import OrderedDict
+
+import base64
+
+import nbtlib 
+from nbtlib import String
 
 
 COMMAND_UNPACK = "unpack"
@@ -34,9 +37,13 @@ def unpack(schematic_path, map_path):
 
 def repack(schematic_path, output_path, map_path):
 
-    print(f"Repacking changes in {schematic_path} from {map_path} to {output_path}\n\r")
+    print(f"Repacking changes in {schematic_path} from {map_path} to {output_path}")
+    print("")
     
-    #Load map of changed blocks
+    # 
+    # Load map of changed blocks
+    # 
+
     with open(map_path) as mapfile:
         swap_map = json.load(mapfile, object_pairs_hook=OrderedDict)
 
@@ -49,7 +56,10 @@ def repack(schematic_path, output_path, map_path):
 
     print("")
     
-    #Swap blocks in the schematic header
+    #
+    # Swap blocks in the schematic header
+    #
+
     with open(schematic_path) as schematic_file:
         input_schematic = json.load(schematic_file, object_pairs_hook=OrderedDict)
     
@@ -62,25 +72,47 @@ def repack(schematic_path, output_path, map_path):
         block_id = list_item["item"]["id"]
         if block_id in swapped_blocks.keys():
             material_list_output[index]["item"]["id"] = swapped_blocks[block_id]
-            print(f"Swapped {block_id} for {swapped_blocks[block_id]}")
+            print(f"Swapped {block_id} for {swapped_blocks[block_id]} in schematic header")
 
     print("")
 
     output_schematic["header"]["material_list"]["root_entry"] = material_list_output
 
-    #Swap blocks in the schematic body
+    # 
+    # Swap blocks in the schematic body
+    #
+    
+    schematic_body_input = input_schematic["body"]
+
+    decoded_body = base64.b64decode(schematic_body_input)
+
+    #Write a temporary nbt file to use existing NBT library (https://github.com/vberlier/nbtlib)
+    #that does not support loading bytes objects directly and needs files
+    with open("sedit.nbt", "wb") as tempfile:
+        tempfile.write(decoded_body)
+
+    with nbtlib.load("sedit.nbt") as nbtfile:
+        for tag in nbtfile["data"]:
+            block_id = tag["state"]["Name"]
+
+            if block_id in swapped_blocks.keys():
+                tag["state"].update({"Name": String(swapped_blocks[block_id])})
+                print(f"Swapped {block_id} for {swapped_blocks[block_id]} in schematic body")
+
+        print("")
+
+        nbtfile.save()
+
+    with open("sedit.nbt", "rb") as nbtfile:
+        nbt_data = nbtfile.read()
+
+    encoded_body = base64.b64encode(nbt_data).decode("utf-8")
+    output_schematic["body"] = encoded_body
+
+    with open(output_path, "w") as output_file:
+        json.dump(output_schematic, output_file, indent=4)
 
     
-    #new_item_list = dict()
-
-    #output_schematic["header"]["material_list"]["root_entry"] = new_item_list
-
-    #print(item_list)
-    
-
-
-
-
 
 if __name__ == "__main__":
 
@@ -95,7 +127,6 @@ if __name__ == "__main__":
     parser.add_argument("-m", "--map", help="Specifies the file in which to store the block swap map") 
 
     args = parser.parse_args()
-
 
     if args.command == COMMAND_UNPACK:
         
@@ -112,7 +143,7 @@ if __name__ == "__main__":
 
         repack(args.schematic, args.output, args.map)
         print(f"Finished repacking {args.schematic} with {args.map}. New schematic is in {args.output}")
-
-    
+        print("")
 
 print("Done!")
+sys.exit()
