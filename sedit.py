@@ -1,3 +1,4 @@
+import copy
 import json
 from pkgutil import iter_modules
 import sys
@@ -10,14 +11,14 @@ COMMAND_UNPACK = "unpack"
 COMMAND_REPACK = "repack"
 
 
-def unpack(schematic, map):
+def unpack(schematic_path, map_path):
 
-    with open(schematic) as file:
+    print(f"Listing all blocks used in {schematic_path} to {map_path}\n\r")
+
+    with open(schematic_path) as file:
         json_schematic = json.load(file)
 
-    schematic_header = json_schematic["header"]
-
-    item_list = schematic_header["material_list"]["root_entry"]
+    item_list = json_schematic["header"]["material_list"]["root_entry"]
 
     swap_map = dict()
 
@@ -25,12 +26,61 @@ def unpack(schematic, map):
         block_id = item["item"]["id"]
         swap_map[block_id] = block_id
 
-    with open(map, "w") as mapfile:
-        json.dump(swap_map, mapfile,indent=4)
+    with open(map_path, "w") as mapfile:
+        json.dump(swap_map, mapfile, indent=4)
 
 
-def repack(schematic, output, map):
-    pass
+def repack(schematic_path, output_path, map_path):
+
+    print(f"Repacking changes in {schematic_path} from {map_path} to {output_path}\n\r")
+    
+    #Load map of changed blocks
+    with open(map_path) as mapfile:
+        swap_map = json.load(mapfile)
+
+    swapped_blocks = dict()
+
+    for key, value in swap_map.items():
+        if key != value: 
+            swapped_blocks[key] = value
+            print(f"Block {key} changed to {value}")
+    
+    #Swap blocks in the schematic header
+    with open(schematic_path) as schematic_file:
+        input_schematic = json.load(schematic_file)
+    
+    output_schematic = copy.deepcopy(input_schematic)
+
+    material_list_input = input_schematic["header"]["material_list"]["root_entry"].copy()
+    material_list_output = copy.deepcopy(material_list_input)
+
+    #TODO: better enumerate
+    #TODO: use OrderedDict
+    for i in range(len(material_list_input)):
+        block = material_list_input[i]["item"]["id"]
+        if block in swapped_blocks.keys():
+            material_list_output[i]["item"]["id"] = swapped_blocks[block]
+            print(f"Found block: {block} that has been swapped for {swapped_blocks[block]}")
+
+    
+    for i in range(len(material_list_input)):
+        print(f"{(material_list_input[i]['item']['id'])} vs {material_list_output[i]['item']['id']}")
+
+
+    print(material_list_output)
+
+
+
+    #Swap blocks in the schematic body
+    
+    
+    
+    #new_item_list = dict()
+
+    #output_schematic["header"]["material_list"]["root_entry"] = new_item_list
+
+    #print(item_list)
+    
 
 
 
