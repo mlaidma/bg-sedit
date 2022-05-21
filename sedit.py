@@ -5,6 +5,7 @@ import sys
 
 import argparse
 from ast import arg, parse
+from typing import OrderedDict
 
 
 COMMAND_UNPACK = "unpack"
@@ -16,7 +17,7 @@ def unpack(schematic_path, map_path):
     print(f"Listing all blocks used in {schematic_path} to {map_path}\n\r")
 
     with open(schematic_path) as file:
-        json_schematic = json.load(file)
+        json_schematic = json.load(file, object_pairs_hook=OrderedDict)
 
     item_list = json_schematic["header"]["material_list"]["root_entry"]
 
@@ -36,7 +37,7 @@ def repack(schematic_path, output_path, map_path):
     
     #Load map of changed blocks
     with open(map_path) as mapfile:
-        swap_map = json.load(mapfile)
+        swap_map = json.load(mapfile, object_pairs_hook=OrderedDict)
 
     swapped_blocks = dict()
 
@@ -47,7 +48,7 @@ def repack(schematic_path, output_path, map_path):
     
     #Swap blocks in the schematic header
     with open(schematic_path) as schematic_file:
-        input_schematic = json.load(schematic_file)
+        input_schematic = json.load(schematic_file, object_pairs_hook=OrderedDict)
     
     output_schematic = copy.deepcopy(input_schematic)
 
@@ -55,7 +56,6 @@ def repack(schematic_path, output_path, map_path):
     material_list_output = copy.deepcopy(material_list_input)
 
     #TODO: better enumerate
-    #TODO: use OrderedDict
     for i in range(len(material_list_input)):
         block = material_list_input[i]["item"]["id"]
         if block in swapped_blocks.keys():
