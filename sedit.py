@@ -1,4 +1,5 @@
 import copy
+import enum
 import json
 from pkgutil import iter_modules
 import sys
@@ -21,7 +22,7 @@ def unpack(schematic_path, map_path):
 
     item_list = json_schematic["header"]["material_list"]["root_entry"]
 
-    swap_map = dict()
+    swap_map = OrderedDict()
 
     for item in item_list:
         block_id = item["item"]["id"]
@@ -39,12 +40,14 @@ def repack(schematic_path, output_path, map_path):
     with open(map_path) as mapfile:
         swap_map = json.load(mapfile, object_pairs_hook=OrderedDict)
 
-    swapped_blocks = dict()
+    swapped_blocks = OrderedDict()
 
     for key, value in swap_map.items():
         if key != value: 
             swapped_blocks[key] = value
             print(f"Block {key} changed to {value}")
+
+    print("")
     
     #Swap blocks in the schematic header
     with open(schematic_path) as schematic_file:
@@ -52,28 +55,21 @@ def repack(schematic_path, output_path, map_path):
     
     output_schematic = copy.deepcopy(input_schematic)
 
-    material_list_input = input_schematic["header"]["material_list"]["root_entry"].copy()
+    material_list_input = input_schematic["header"]["material_list"]["root_entry"]
     material_list_output = copy.deepcopy(material_list_input)
 
-    #TODO: better enumerate
-    for i in range(len(material_list_input)):
-        block = material_list_input[i]["item"]["id"]
-        if block in swapped_blocks.keys():
-            material_list_output[i]["item"]["id"] = swapped_blocks[block]
-            print(f"Found block: {block} that has been swapped for {swapped_blocks[block]}")
+    for index, list_item in enumerate(material_list_input):
+        block_id = list_item["item"]["id"]
+        if block_id in swapped_blocks.keys():
+            material_list_output[index]["item"]["id"] = swapped_blocks[block_id]
+            print(f"Swapped {block_id} for {swapped_blocks[block_id]}")
 
-    
-    for i in range(len(material_list_input)):
-        print(f"{(material_list_input[i]['item']['id'])} vs {material_list_output[i]['item']['id']}")
+    print("")
 
-
-    print(material_list_output)
-
-
+    output_schematic["header"]["material_list"]["root_entry"] = material_list_output
 
     #Swap blocks in the schematic body
-    
-    
+
     
     #new_item_list = dict()
 
