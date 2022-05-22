@@ -1,20 +1,16 @@
 import copy
 import json
-from pkgutil import iter_modules
+import base64
 import sys
 
 import argparse
 from typing import OrderedDict
 
-import base64
-
 import nbtlib 
 from nbtlib import String
 
-
 COMMAND_UNPACK = "unpack"
 COMMAND_REPACK = "repack"
-
 
 def unpack(schematic_path, map_path):
 
