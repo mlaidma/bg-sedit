@@ -133,9 +133,8 @@ dmypy.json
 .vscode
 
 #Testing files
-potion-shop.json
-potion-shop-edited.json
-swap-map.json
-output.json
+schematics/*
+
+#Temporary nbt file
 sedit.nbt
 
