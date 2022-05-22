@@ -127,3 +127,14 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+#VSCode
+*.code-workspace
+.vscode
+
+#Testing files
+schematics/*
+
+#Temporary nbt file
+sedit.nbt
+
