@@ -15,6 +15,7 @@ COMMAND_REPACK = "repack"
 def unpack(schematic_path, map_path):
 
     print(f"Listing all blocks used in {schematic_path} to {map_path}\n\r")
+    print("")
 
     with open(schematic_path) as file:
         json_schematic = json.load(file, object_pairs_hook=OrderedDict)
@@ -48,7 +49,7 @@ def repack(schematic_path, output_path, map_path):
     for key, value in swap_map.items():
         if key != value: 
             swapped_blocks[key] = value
-            print(f"Block {key} changed to {value}")
+            print(f"Block {key} changed to {value} in the swap map {map_path}")
 
     print("")
     
@@ -95,9 +96,9 @@ def repack(schematic_path, output_path, map_path):
                 tag["state"].update({"Name": String(swapped_blocks[block_id])})
                 print(f"Swapped {block_id} for {swapped_blocks[block_id]} in schematic body")
 
+        nbtfile.save()
         print("")
 
-        nbtfile.save()
 
     with open("sedit.nbt", "rb") as nbtfile:
         nbt_data = nbtfile.read()
@@ -111,6 +112,10 @@ def repack(schematic_path, output_path, map_path):
     
 
 if __name__ == "__main__":
+
+    print("")
+    print("Starting bg-sedit!")
+    print("")
 
     parser = argparse.ArgumentParser(description="Swap blocks within a Building Gadgets schematic")
 
@@ -131,6 +136,7 @@ if __name__ == "__main__":
 
         unpack(args.schematic, args.map)
         print(f"Finished unpacking {args.schematic}. Swap map is stored in {args.map}")
+        print("")
 
     if args.command == COMMAND_REPACK:
         
